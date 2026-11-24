@@ -1,0 +1,1005 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}</style></head><body>
+<title>Buzzer Beater</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="apple-mobile-web-app-title" content="Buzzer Beater">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: eine Spalte wie ein Scouting-Bogen. Oben Liga und Zeitraum, darunter Spiele nach Tag, Tippen öffnet die Analyse. */
+:root{
+  --bg:#f6f3ef; --card:#ffffff; --ink:#1f1a16; --muted:#6b625a; --line:#e3dcd4;
+  --acc:#c2531a; --acc-ink:#ffffff; --acc-soft:#f8e6da;
+  --alt:#2f5d8a; --alt-ink:#ffffff;
+  --win:#2e7d4f; --red:#b3362c; --red-soft:#f7e0dd;
+  --amber:#a86a00; --amber-soft:#f8ecd3; --bar:#ece6df;
+  --shadow:0 1px 2px rgba(31,26,22,.06),0 4px 14px rgba(31,26,22,.05);
+  --f-display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"Inter",system-ui,-apple-system,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#14110f; --card:#1e1a17; --ink:#ede7e1; --muted:#a39a91; --line:#352e29;
+  --acc:#f08a4b; --acc-ink:#1a0f08; --acc-soft:#3a2416; --alt:#7fb0e0; --alt-ink:#0b1520;
+  --win:#5cc28d; --red:#f08a80; --red-soft:#3d1d1a; --amber:#f0b24e; --amber-soft:#3a2b12;
+  --bar:#2a2420; --shadow:0 1px 2px rgba(0,0,0,.35); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#14110f; --card:#1e1a17; --ink:#ede7e1; --muted:#a39a91; --line:#352e29;
+  --acc:#f08a4b; --acc-ink:#1a0f08; --acc-soft:#3a2416; --alt:#7fb0e0; --alt-ink:#0b1520;
+  --win:#5cc28d; --red:#f08a80; --red-soft:#3d1d1a; --amber:#f0b24e; --amber-soft:#3a2b12;
+  --bar:#2a2420; --shadow:0 1px 2px rgba(0,0,0,.35); color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px 48px}
+.wrap{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance;letter-spacing:.01em}
+h1{font-size:2rem;font-weight:800;text-transform:uppercase;line-height:1}
+h2{font-size:1.35rem;font-weight:700;text-transform:uppercase}
+h3{font-size:1.05rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)} .small{font-size:.82rem}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;flex-direction:column;gap:2px}
+.brand .line{height:4px;width:56px;background:var(--acc);border-radius:2px}
+.iconbtn{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:8px 12px;font-weight:600;font-size:.9rem}
+.srcchip{display:inline-flex;align-items:center;gap:6px;font-size:.8rem;font-weight:600;padding:3px 9px;border-radius:99px;background:var(--acc-soft);color:var(--acc)}
+.srcchip.demo{background:var(--amber-soft);color:var(--amber)}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;border:1px solid var(--line);background:var(--card);border-radius:99px;padding:7px 14px;font-weight:600;font-size:.9rem;white-space:nowrap}
+.chip[aria-pressed="true"]{background:var(--acc);border-color:var(--acc);color:var(--acc-ink)}
+.seg{display:flex;background:var(--bar);border-radius:10px;padding:3px;gap:3px}
+.seg button{flex:1;border:0;background:transparent;border-radius:8px;padding:7px 6px;font-weight:600;font-size:.88rem;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--card);color:var(--ink);box-shadow:var(--shadow)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px;min-width:0}
+.day{font-family:var(--f-display);font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-size:.95rem;margin-top:4px}
+.fx{display:grid;grid-template-columns:52px 1fr auto;align-items:center;gap:10px;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:11px 12px}
+.fx:hover{border-color:var(--acc)}
+.fx .t{font-family:var(--f-mono);font-size:.85rem;color:var(--muted)}
+.fx .m{min-width:0;display:flex;flex-direction:column}
+.fx .m span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.fx .m span small{font-weight:400;color:var(--muted)}
+.fx .go{font-size:.8rem;font-weight:600;color:var(--acc)}
+.fx .live{color:var(--red)}
+.list{display:flex;flex-direction:column;gap:8px}
+.note{border-radius:12px;padding:11px 13px;font-size:.88rem;background:var(--amber-soft);color:var(--ink);border:1px solid transparent}
+.note.err{background:var(--red-soft)}
+.note b{color:var(--amber)} .note.err b{color:var(--red)}
+.empty{padding:28px 12px;text-align:center;color:var(--muted)}
+/* Analyse */
+.head{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:8px;align-items:center;text-align:center}
+.head .team{font-family:var(--f-display);font-weight:800;font-size:clamp(.95rem,4vw,1.4rem);text-transform:uppercase;line-height:1.05;overflow-wrap:anywhere;min-width:0}
+.head .team small{display:block;font-family:var(--f-body);font-weight:500;font-size:.72rem;text-transform:none;color:var(--muted);margin-top:3px}
+.head .xg{font-family:var(--f-mono);font-size:clamp(1rem,4.6vw,1.6rem);white-space:nowrap}
+.head .vs{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.tri{display:flex;height:30px;border-radius:8px;overflow:hidden;font-family:var(--f-mono);font-size:.8rem;font-weight:500;gap:2px}
+.tri div{display:flex;align-items:center;justify-content:center;min-width:0;overflow:hidden;white-space:nowrap}
+.tri .h{background:var(--acc);color:var(--acc-ink)} .tri .a{background:var(--alt);color:var(--alt-ink)}
+.legend{display:flex;justify-content:space-between;gap:10px;font-size:.78rem;color:var(--muted)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:10px}
+.kpi{background:var(--bg);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.kpi .v{font-family:var(--f-mono);font-size:1.25rem}
+.kpi .l{font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;overflow-wrap:anywhere}
+.rows{display:flex;flex-direction:column;gap:7px}
+.prow{display:grid;grid-template-columns:minmax(0,1fr) 80px 44px;gap:10px;align-items:center;font-size:.9rem}
+.prow .n{min-width:0;display:flex;flex-direction:column;line-height:1.25}
+.prow .n small{color:var(--muted);font-size:.75rem}
+.meter{height:8px;background:var(--bar);border-radius:4px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--acc);border-radius:4px}
+.meter.alt i{background:var(--alt)}
+.prow .p{font-family:var(--f-mono);font-size:.85rem;text-align:right}
+.form{display:flex;gap:4px;flex-wrap:nowrap}
+.form span{width:24px;height:24px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-family:var(--f-mono);font-size:.75rem;font-weight:500}
+.form .W{background:var(--win);color:var(--card)} .form .L{background:var(--red);color:var(--card)}
+.formrow{display:grid;grid-template-columns:64px auto 1fr;gap:8px;align-items:center;font-size:.85rem}
+.formrow .num{white-space:nowrap}
+.tbl{width:100%;border-collapse:collapse;font-size:.88rem}
+.tbl th{font-weight:600;color:var(--muted);text-align:left;font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;padding:4px 6px;border-bottom:1px solid var(--line)}
+.tbl td{padding:6px;border-bottom:1px solid var(--line)}
+.tbl td.r,.tbl th.r{text-align:right}
+.tbl td.num,.tbl td.r{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.tbl td.nm{max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.scroll{overflow-x:auto}
+.teamcols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+.teamcols>*{min-width:0}
+@media (max-width:520px){.teamcols{grid-template-columns:minmax(0,1fr)}}
+.tag{display:inline-block;font-size:.68rem;font-weight:600;padding:1px 6px;border-radius:99px;background:var(--red-soft);color:var(--red);vertical-align:1px;margin-left:4px}
+.tag.ok{background:var(--acc-soft);color:var(--acc)}
+.back{align-self:flex-start;border:0;background:none;color:var(--acc);font-weight:600;padding:4px 0}
+details summary{cursor:pointer;font-weight:600}
+.explain{font-size:.88rem;color:var(--muted)}
+.explain p{margin:.4em 0}
+/* Einstellungen */
+.sheet{position:fixed;inset:0;background:rgba(16,12,10,.45);display:flex;align-items:flex-end;justify-content:center;z-index:20}
+.sheet .panel{background:var(--card);width:100%;max-width:560px;border-radius:18px 18px 0 0;max-height:92%;overflow:auto;
+  padding:18px max(18px,env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(18px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:14px}
+.opt{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:12px;padding:11px;cursor:pointer}
+.opt input{margin-top:4px;accent-color:var(--acc)}
+.opt b{display:block}
+.field{display:flex;flex-direction:column;gap:5px}
+.field input,.field select{border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:10px 12px;width:100%}
+.btn{border:0;background:var(--acc);color:var(--acc-ink);border-radius:10px;padding:11px 16px;font-weight:600}
+.btn.ghost{background:var(--bar);color:var(--ink)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid var(--line);border-top-color:var(--acc);border-radius:50%;animation:sp .8s linear infinite;vertical-align:-2px}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spin{animation:none}}
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <div class="brand">
+      <h1>Buzzer Beater</h1>
+      <div class="line"></div>
+    </div>
+    <div class="row">
+      <span id="srcChip" class="srcchip demo">Beispieldaten</span>
+      <button class="iconbtn" id="openSettings" type="button">Einstellungen</button>
+    </div>
+  </div>
+
+  <div id="listView" class="wrap" style="gap:12px">
+    <form class="card" id="matchForm" autocomplete="off">
+      <div class="field">
+        <label for="matchQuery"><b>Spiel suchen</b> <span class="small muted">Heimteam - Auswärtsteam</span></label>
+        <div class="row" style="flex-wrap:nowrap">
+          <input id="matchQuery" type="search" placeholder="z. B. Lakers - Celtics" style="flex:1;min-width:0" enterkeyhint="search">
+          <button class="btn" type="submit">Analysieren</button>
+        </div>
+      </div>
+      <div id="matchMsg"></div>
+    </form>
+    <div class="chips" id="leagueChips" role="group" aria-label="Liga"></div>
+    <div id="otherLeague" class="card" hidden>
+      <div class="field">
+        <label for="leagueSearch">Andere Liga suchen (API-Basketball, gleicher Schlüssel)</label>
+        <div class="row" style="flex-wrap:nowrap">
+          <input id="leagueSearch" type="search" placeholder="z. B. Euroleague, BBL, ACB, WNBA" style="flex:1;min-width:0">
+          <button class="btn" id="leagueSearchBtn" type="button">Suchen</button>
+        </div>
+      </div>
+      <div id="leagueResults" class="list"></div>
+    </div>
+    <div class="seg" id="rangeSeg" role="group" aria-label="Zeitraum">
+      <button type="button" data-r="24" aria-pressed="false">Nächste 24 Std.</button>
+      <button type="button" data-r="72" aria-pressed="true">3 Tage</button>
+      <button type="button" data-r="168" aria-pressed="false">7 Tage</button>
+    </div>
+    <div id="budget" class="small muted"></div>
+    <div id="fixtures" class="list"></div>
+  </div>
+
+  <div id="detailView" class="wrap" hidden></div>
+
+  <p class="small muted" style="margin:8px 0 0">Alle Werte sind statistische Schätzungen aus vergangenen Spielen, keine Garantien. Zeiten in Schweizer Zeit.</p>
+</div>
+
+<div class="sheet" id="sheet" hidden>
+  <div class="panel" role="dialog" aria-modal="true" aria-labelledby="setTitle">
+    <div class="top"><h2 id="setTitle">Einstellungen</h2><button class="iconbtn" id="closeSettings" type="button">Fertig</button></div>
+    <div class="field"><span class="small muted">Datenquelle</span></div>
+    <label class="opt"><input type="radio" name="src" value="demo"><span><b>Beispieldaten</b><span class="small muted">Erfundene Teams und Spieler, zum Ausprobieren ohne Schlüssel.</span></span></label>
+    <label class="opt"><input type="radio" name="src" value="espn"><span><b>ESPN gratis (empfohlen)</b><span class="small muted">Aktuelle Saison, kein Schlüssel nötig. Alles: Punkte, Viertel, Rebounds, Assists, Dreier, Tempo, Spielerprognosen. Inoffizielle Schnittstelle, kann sich ändern.</span></span></label>
+    <label class="opt"><input type="radio" name="src" value="bdl"><span><b>balldontlie gratis</b><span class="small muted">Aktuelle Saison, aber nur Resultate: Form, H2H, Punkte, Viertel. Keine Spieler- und Teamstatistiken. 5 Abfragen pro Minute.</span></span></label>
+    <label class="opt"><input type="radio" name="src" value="nba-pro"><span><b>API-NBA (bezahltes Abo)</b><span class="small muted">Gratis gibt api-sports nur die Saisons 2022 bis 2024 frei. Für die laufende Saison braucht es ein Abo. Mit „+ Andere Ligen“ und „Alle Spiele analysieren“.</span></span></label>
+    <div class="field" id="keyField">
+      <label for="apiKey">api-sports Schlüssel (dashboard.api-football.com, derselbe wie bei Goats Analyse)</label>
+      <input id="apiKey" type="password" autocomplete="off" placeholder="Schlüssel einfügen">
+    </div>
+    <div class="field" id="bdlKeyField">
+      <label for="bdlKey">balldontlie Schlüssel (app.balldontlie.io)</label>
+      <input id="bdlKey" type="password" autocomplete="off" placeholder="Schlüssel einfügen">
+    </div>
+    <p class="small muted" style="margin:0">Der Schlüssel bleibt nur auf diesem Gerät gespeichert und geht direkt an den Datenanbieter.</p>
+    <div class="row"><button class="btn ghost" id="clearCache" type="button">Zwischenspeicher leeren</button><span id="cacheInfo" class="small muted"></span></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ========== Hilfsfunktionen ========== */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem("kl:"+k); return v==null ? d : JSON.parse(v); }catch(e){ return d; } },
+  set(k, v){
+    const s = JSON.stringify(v);
+    try{ localStorage.setItem("kl:"+k, s); }
+    catch(e){ // Speicher voll: alte Zwischenspeicher wegräumen und nochmals versuchen
+      try{ Object.keys(localStorage).filter(x => x.startsWith("kl:c:")).forEach(x => localStorage.removeItem(x)); localStorage.setItem("kl:"+k, s); }catch(e2){}
+    }
+  },
+  raw(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+};
+const pct = p => Math.round(p*100) + "%";
+const f1 = x => x==null || isNaN(x) ? "–" : (Math.round(x*10)/10).toFixed(1);
+const f0 = x => x==null || isNaN(x) ? "–" : String(Math.round(x));
+const ymd = d => d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+const addDays = (d,n) => { const x = new Date(d); x.setDate(x.getDate()+n); return x; };
+const dayName = d => d.toLocaleDateString("de-CH",{weekday:"long", day:"numeric", month:"long"});
+const timeStr = d => d.toLocaleTimeString("de-CH",{hour:"2-digit",minute:"2-digit"});
+const avg = a => a.length ? a.reduce((s,x)=>s+x,0)/a.length : 0;
+const sum = a => a.reduce((s,x)=>s+x,0);
+const clamp = (x,lo,hi) => Math.min(hi, Math.max(lo, x));
+// NBA-Saison heisst nach dem Startjahr: Oktober 2026 bis Juni 2027 = Saison 2026
+const seasonYear = () => { const n = new Date(); return n.getMonth()>=9 ? n.getFullYear() : n.getFullYear()-1; };
+
+const ALIAS = {sixers:"76ers", blazers:"trail blazers", cavs:"cavaliers", mavs:"mavericks", wolves:"timberwolves", dubs:"warriors", nugs:"nuggets", grizz:"grizzlies", pels:"pelicans", knickerbockers:"knicks"};
+const norm = s => String(s||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9 ]/g," ").replace(/\s+/g," ").trim();
+const normQ = s => { const n = norm(s); return ALIAS[n] || n; };
+function splitQuery(q){
+  let parts = q.split(/\s+(?:-|–|—|vs\.?|v|@|gegen)\s+/i);
+  if(parts.length!==2) parts = q.split(/\s*[–—@]\s*/);
+  if(parts.length!==2 && (q.match(/-/g)||[]).length===1) parts = q.split("-");
+  parts = parts.map(x=>x.trim()).filter(Boolean);
+  if(parts.length!==2) throw new Error("Schreib das Spiel so: Heimteam - Auswärtsteam, zum Beispiel „Lakers - Celtics“.");
+  return parts;
+}
+// Bester Treffer über mehrere Namen (Name, Spitzname, Stadt, Kürzel): exakt, beginnt mit, ganzes Wort, enthält
+function bestTeam(list, q, namesOf){
+  const n = normQ(q);
+  const sc1 = v => v===n ? 0 : v.startsWith(n) ? 1 : v.split(" ").includes(n) ? 2 : v.includes(n) ? 3 : 9;
+  const sc = t => Math.min(...namesOf(t).filter(Boolean).map(x => sc1(norm(x))));
+  const r = list.map(t => ({t, s:sc(t)})).filter(x => x.s<9).sort((a,b)=>a.s-b.s);
+  return r.length ? r[0].t : null;
+}
+function freeFixture(h, a, extra){ return Object.assign({id:"q-"+h.id+"-"+a.id, date:new Date().toISOString(), league:"Freie Abfrage", free:true, home:h, away:a}, extra||{}); }
+// Nächstes angesetztes Spiel der beiden Teams suchen, egal wer Heimteam ist
+function nextMeeting(games, h, a){
+  const now = Date.now() - 3*3600e3;
+  const g = games.filter(g => !g.done && new Date(g.date).getTime() > now &&
+    ((g.h.id===h.id && g.v.id===a.id) || (g.h.id===a.id && g.v.id===h.id))).sort((x,y)=>new Date(x.date)-new Date(y.date))[0];
+  return g || null;
+}
+function toFixture(g, league){ return {id:g.id, date:g.date, league:league.name, lg:league.id, live:g.live, home:g.h, away:g.v}; }
+
+/* ========== Statistik: Normalverteilung ========== */
+// Basketball hat viele Punkte, darum passt die Normalverteilung besser als Poisson.
+function erf(x){ const s = Math.sign(x); x = Math.abs(x); const t = 1/(1+0.3275911*x);
+  return s*(1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x)); }
+const PHI = x => 0.5*(1+erf(x/Math.SQRT2));
+const pOverN = (line, mu, sd) => 1-PHI((line-mu)/sd);
+function poisson(k, l){ let p = Math.exp(-l); for(let i=1;i<=k;i++) p *= l/i; return p; }
+const pAtLeastP = (k, l) => { let s=0; for(let i=0;i<k;i++) s+=poisson(i,l); return 1-s; };
+// Streuungen aus NBA-Erfahrungswerten (Standardabweichung)
+const SD = {margin:12.5, total:18, h1margin:8.5, h1total:11, q1total:7};
+function blend(venueVals, allVals){
+  if(!allVals.length) return 0;
+  const w = venueVals.length/(venueVals.length+4);
+  return w*avg(venueVals) + (1-w)*avg(allVals);
+}
+
+/* ========== Spielverlauf je Team aus der Spielliste ========== */
+// Kompaktes Spiel: {id,date,season,done,live,h:{id,name},v:{id,name},hp,vp,hq:[..]|null,vq:[..]|null}
+// ps[teamId][gameId] = {st:{fga,fgm,tpa,tpm,fta,ftm,oreb,reb,ast,to,stl,blk}, players:[{id,name,min,pts,reb,ast,tpm}]}
+function histFrom(games, teamId, beforeIso, ps){
+  const before = new Date(beforeIso).getTime();
+  return games.filter(g => g.done && g.hp!=null && (g.h.id===teamId || g.v.id===teamId) && new Date(g.date).getTime() < before)
+    .sort((x,y)=>new Date(y.date)-new Date(x.date)).map(g => {
+      const isHome = g.h.id===teamId, op = isHome ? g.v : g.h;
+      const mine = ps && ps[teamId] && ps[teamId][g.id], theirs = ps && ps[op.id] && ps[op.id][g.id];
+      const q = isHome ? g.hq : g.vq, qa = isHome ? g.vq : g.hq;
+      return {gid:g.id, date:g.date, season:g.season, isHome, opp:op.name, oppId:op.id,
+        pf:isHome?g.hp:g.vp, pa:isHome?g.vp:g.hp, q:q&&q.length>=4?q:null, qa:qa&&qa.length>=4?qa:null, ot:!!(q && q.length>4),
+        st:mine?mine.st:null, stA:theirs?theirs.st:null, players:mine?mine.players:null};
+    });
+}
+function h2hFrom(games, a, b, before){
+  return games.filter(g => g.done && g.hp!=null && new Date(g.date) < new Date(before) && ((g.h.id===a&&g.v.id===b)||(g.h.id===b&&g.v.id===a)))
+    .sort((x,y)=>new Date(y.date)-new Date(x.date)).slice(0,8)
+    .map(g => ({date:g.date, home:g.h.name, homeId:g.h.id, away:g.v.name, hp:g.hp, vp:g.vp, ot:!!(g.hq && g.hq.length>4)}));
+}
+function leagueAvgPts(games){
+  const d = games.filter(g => g.done && g.hp!=null);
+  return d.length >= 10 ? avg(d.map(g => (g.hp+g.vp)/2)) : 114;
+}
+function analyzeFromGames(fx, cur, prev, ps){
+  const all = cur.concat(prev||[]);
+  const hH = histFrom(all, fx.home.id, fx.date, ps), hA = histFrom(all, fx.away.id, fx.date, ps);
+  return analyze(fx, {hH, hA, h2h:h2hFrom(all, fx.home.id, fx.away.id, fx.date), leaguePts:leagueAvgPts(cur.length>=10?cur:all), season:cur.length ? cur[0].season : null});
+}
+
+/* ========== Analyse ========== */
+function teamSplit(hist, venueHome, pick){
+  const all = hist.map(pick).filter(v => v!=null && !isNaN(v));
+  const ven = hist.filter(m => m.isHome===venueHome).map(pick).filter(v => v!=null && !isNaN(v));
+  return {all, ven};
+}
+// Erwartung = Mittel aus eigener Stärke (Heim bzw. Auswärts gewichtet) und dem, was der Gegner zulässt.
+// Fehlen Werte zum Gegner, zählt nur die eigene Stärke.
+function expected(histA, aHome, pickFor, histB, pickAgainst){
+  const a = teamSplit(histA, aHome, pickFor), b = teamSplit(histB, !aHome, pickAgainst);
+  if(!a.all.length) return null;
+  if(!b.all.length) return blend(a.ven, a.all);
+  return (blend(a.ven,a.all) + blend(b.ven,b.all))/2;
+}
+function formOf(hist, filter){
+  const ms = hist.filter(filter).slice(0,5);
+  return {res:ms.map(m => m.pf>m.pa ? "W" : "L"), n:ms.length, pf:avg(ms.map(m=>m.pf)), pa:avg(ms.map(m=>m.pa))};
+}
+function recordOf(hist, season){
+  const cur = hist.filter(m => season==null || m.season==null || m.season===season);
+  const w = cur.filter(m=>m.pf>m.pa).length, l = cur.length-w;
+  const hw = cur.filter(m=>m.isHome&&m.pf>m.pa).length, hl = cur.filter(m=>m.isHome).length-hw;
+  const aw = cur.filter(m=>!m.isHome&&m.pf>m.pa).length, al = cur.filter(m=>!m.isHome).length-aw;
+  const l10 = hist.slice(0,10), l10w = l10.filter(m=>m.pf>m.pa).length;
+  let streak = 0; const first = hist[0] ? hist[0].pf>hist[0].pa : null;
+  for(const m of hist){ if((m.pf>m.pa)===first) streak++; else break; }
+  return {w, l, hw, hl, aw, al, l10w, l10l:l10.length-l10w, streak: hist.length ? (first?"S":"N")+streak : "–", n:cur.length};
+}
+function restOf(hist, dateIso){
+  if(!hist.length) return {txt:"unbekannt", b2b:false};
+  const hours = (new Date(dateIso) - new Date(hist[0].date))/3600e3;
+  if(hours < 36) return {txt:"Back-to-back", b2b:true, hours};
+  const d = Math.max(0, Math.round(hours/24)-1);
+  return {txt: d===1 ? "1 Ruhetag" : d+" Ruhetage", b2b:false, hours};
+}
+const possOf = s => s ? s.fga - s.oreb + s.to + 0.44*s.fta : null;
+function playerModel(hist, factor){
+  const games = hist.filter(m => m.players).slice(0,10);
+  if(!games.length) return null;
+  const agg = {};
+  games.forEach((m,gi) => m.players.forEach(p => {
+    const a = agg[p.id] || (agg[p.id] = {id:p.id, name:p.name, rows:[], last:-1});
+    if(p.min > 0){ a.rows.push(p); if(a.last<0) a.last = gi; }
+  }));
+  return Object.values(agg).filter(a => a.rows.length>=2).map(a => {
+    const r = a.rows, mins = avg(r.map(x=>x.min)), totMin = sum(r.map(x=>x.min)) || 1;
+    const proj = k => sum(r.map(x=>x[k]||0))/totMin*mins*(k==="reb"?1:factor);
+    const sdOf = (k, mu) => { const v = r.map(x=>x[k]||0), m = avg(v); return Math.max(Math.sqrt(avg(v.map(x=>(x-m)**2))), 0.3*mu, 1.2); };
+    const pts = proj("pts"), reb = proj("reb"), ast = proj("ast"), tpm = proj("tpm");
+    const o = (line, mu, k) => pOverN(line, mu, sdOf(k, mu));
+    const p10 = [o(9.5,pts,"pts"), o(9.5,reb,"reb"), o(9.5,ast,"ast")];
+    const pDD = p10[0]*p10[1] + p10[0]*p10[2] + p10[1]*p10[2] - 2*p10[0]*p10[1]*p10[2]; // mind. zwei von drei zweistellig
+    return {name:a.name, gp:r.length, n:games.length, missed:a.last, mins, pts, reb, ast, tpm,
+      aPts:avg(r.map(x=>x.pts||0)), p20:o(19.5,pts,"pts"), p30:o(29.5,pts,"pts"), pReb10:p10[1], pAst8:o(7.5,ast,"ast"), p3:pAtLeastP(3, Math.max(0.01,tpm)), pDD};
+  });
+}
+function analyze(fx, c){
+  const {hH, hA, h2h, leaguePts, season} = c;
+  const H10 = hH.slice(0,10), A10 = hA.slice(0,10);
+  const out = {fx, h2h, nH:H10.length, nA:A10.length};
+  const g = k => m => m[k];
+  out.restH = restOf(hH, fx.date); out.restA = restOf(hA, fx.date);
+  let lamH = expected(H10, true, g("pf"), A10, g("pa")) ?? leaguePts+1.5;
+  let lamA = expected(A10, false, g("pf"), H10, g("pa")) ?? leaguePts-1.5;
+  if(out.restH.b2b) lamH -= 1.5;
+  if(out.restA.b2b) lamA -= 1.5;
+  Object.assign(out, {lamH, lamA});
+  const mu = lamH-lamA, tot = lamH+lamA;
+  out.pH = PHI(mu/SD.margin); out.pA = 1-out.pH;
+  out.pClose = PHI((5.5-mu)/SD.margin) - PHI((-5.5-mu)/SD.margin);
+  out.pBlow = 1 - (PHI((14.5-mu)/SD.margin) - PHI((-14.5-mu)/SD.margin));
+  const around = (m, offs) => [...new Set(offs.map(o => Math.round(m+o)+0.5))];
+  out.totLines = around(tot, [-11,-6,-1,4,9]).map(l => ({l, p:pOverN(l, tot, SD.total)}));
+  out.spread = around(mu, [-7,-4,-1,2,5]).map(l => ({l, p:1-PHI((l-mu)/SD.margin)})); // P(Heim gewinnt mit mehr als l)
+  // Viertel und Halbzeit
+  const hasQ = H10.filter(m=>m.q).length>=3 && A10.filter(m=>m.q).length>=3;
+  if(hasQ){
+    const h1 = m => m.q ? m.q[0]+m.q[1] : null, h1a = m => m.qa ? m.qa[0]+m.qa[1] : null;
+    const q1 = m => m.q ? m.q[0] : null, q1a = m => m.qa ? m.qa[0] : null;
+    const q4 = m => m.q ? m.q[3] : null, q4a = m => m.qa ? m.qa[3] : null;
+    out.h1H = expected(H10,true,h1,A10,h1a); out.h1A = expected(A10,false,h1,H10,h1a);
+    out.q1H = expected(H10,true,q1,A10,q1a); out.q1A = expected(A10,false,q1,H10,q1a);
+    out.q4H = expected(H10,true,q4,A10,q4a); out.q4A = expected(A10,false,q4,H10,q4a);
+    const hm = out.h1H-out.h1A, ht = out.h1H+out.h1A;
+    out.pHalfH = PHI(hm/SD.h1margin);
+    out.h1Lines = around(ht, [-6,-3,0,3,6]).map(l => ({l, p:pOverN(l, ht, SD.h1total)}));
+    out.q1Lines = around(out.q1H+out.q1A, [-4,-1,2]).map(l => ({l, p:pOverN(l, out.q1H+out.q1A, SD.q1total)}));
+    out.hasQ = true;
+  }
+  // Teamwerte
+  const hasSt = H10.some(m=>m.st) && A10.some(m=>m.st);
+  if(hasSt){
+    const s = k => m => m.st ? m.st[k] : null, sa = k => m => m.stA ? m.stA[k] : null;
+    const pair = k => ({h:expected(H10,true,s(k),A10,sa(k)), a:expected(A10,false,s(k),H10,sa(k)),
+      oh:avg(H10.filter(m=>m.st).map(m=>m.st[k])), oa:avg(A10.filter(m=>m.st).map(m=>m.st[k]))});
+    out.st = {reb:pair("reb"), ast:pair("ast"), tpm:pair("tpm"), tpa:pair("tpa"), to:pair("to"), stl:pair("stl"), blk:pair("blk"), oreb:pair("oreb")};
+    const pace = hs => avg(hs.filter(m=>m.st).map(m => possOf(m.st)));
+    const ortg = hs => { const x = hs.filter(m=>m.st); return x.length ? sum(x.map(m=>m.pf))/sum(x.map(m=>possOf(m.st)))*100 : null; };
+    const drtg = hs => { const x = hs.filter(m=>m.st); return x.length ? sum(x.map(m=>m.pa))/sum(x.map(m=>possOf(m.stA || m.st)))*100 : null; };
+    const fg3 = hs => { const x = hs.filter(m=>m.st); const a = sum(x.map(m=>m.st.tpa)); return a ? sum(x.map(m=>m.st.tpm))/a : null; };
+    const fg = hs => { const x = hs.filter(m=>m.st); const a = sum(x.map(m=>m.st.fga)); return a ? sum(x.map(m=>m.st.fgm))/a : null; };
+    out.adv = {paceH:pace(H10), paceA:pace(A10), ortgH:ortg(H10), ortgA:ortg(A10), drtgH:drtg(H10), drtgA:drtg(A10), fg3H:fg3(H10), fg3A:fg3(A10), fgH:fg(H10), fgA:fg(A10)};
+    out.adv.pace = (out.adv.paceH + out.adv.paceA)/2;
+    const t3 = out.st.tpm.h + out.st.tpm.a, tr = out.st.reb.h + out.st.reb.a;
+    out.tpmLines = around(t3, [-3,0,3]).map(l => ({l, p:pOverN(l, t3, 4.8)}));
+    out.rebLines = around(tr, [-5,0,5]).map(l => ({l, p:pOverN(l, tr, 8)}));
+    out.hasSt = true;
+  }
+  const fH = clamp(lamH/(avg(H10.map(m=>m.pf))||lamH), .88, 1.12), fA = clamp(lamA/(avg(A10.map(m=>m.pf))||lamA), .88, 1.12);
+  out.plH = playerModel(hH, fH); out.plA = playerModel(hA, fA);
+  out.formH = {all:formOf(hH,()=>true), ven:formOf(hH,m=>m.isHome)};
+  out.formA = {all:formOf(hA,()=>true), ven:formOf(hA,m=>!m.isHome)};
+  out.recH = recordOf(hH, season); out.recA = recordOf(hA, season);
+  out.otH = H10.filter(m=>m.ot).length; out.otA = A10.filter(m=>m.ot).length;
+  return out;
+}
+
+/* ========== Datenquelle: Beispieldaten ========== */
+const Demo = (() => {
+  let seed = 20261117;
+  const rnd = () => { seed = (seed*1664525 + 1013904223) % 4294967296; return seed/4294967296; };
+  const nrm = () => { let u = 0; while(!u) u = rnd(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*rnd()); };
+  const names = ["Harbor Gulls","Mesa Coyotes","Northfield Pines","Bayline Comets","Iron Valley Forge","Redrock Rattlers","Lakeshore Herons","Summit Owls","Riverside Otters","Prairie Bison","Glacier Foxes","Metro Volts"];
+  const first = ["Marcus","Jalen","Tyrese","Darius","Malik","Andre","Keon","Isaiah","Terrell","Devin","Jordan","Cam","Luka","Nikola","Ömer","Bruno","Theo","Elijah","Xavier","Quentin"];
+  const last = ["Whitfield","Okafor","Brennan","Castillo","Harlow","Mbeki","Sandoval","Pryce","Lindgren","Adeyemi","Carver","Novak","Quinlan","Tavares","Ellery","Banks","Moreau","Kessler","Odum","Varga"];
+  const roles = [{min:35,use:1.5,reb:.8,ast:2.2,three:1.3},{min:33,use:1.3,reb:.9,ast:1.1,three:1.4},{min:32,use:1.15,reb:1.1,ast:.8,three:1},{min:31,use:1,reb:1.8,ast:.7,three:.6},{min:29,use:.9,reb:2.1,ast:.5,three:.2},
+    {min:22,use:.75,reb:.8,ast:.9,three:1},{min:20,use:.6,reb:1,ast:.6,three:.8},{min:16,use:.5,reb:1.3,ast:.4,three:.4},{min:13,use:.45,reb:.8,ast:.6,three:.7},{min:9,use:.4,reb:.9,ast:.3,three:.3}];
+  const S = seasonYear();
+  const teams = names.map((n,i) => ({id:i+1, name:n, nick:n.split(" ").pop(),
+    off:110+rnd()*10, def:110+rnd()*10, pace:97+rnd()*6, tpr:.36+rnd()*.1, three:.34+rnd()*.05,
+    squad:roles.map((r,k) => Object.assign({id:(i+1)*100+k, name:first[Math.floor(rnd()*first.length)]+" "+last[Math.floor(rnd()*last.length)]}, r))}));
+  const ps = {}; teams.forEach(t => ps[t.id] = {});
+  const split = (pts, n) => { const w = Array.from({length:n},()=>0.8+rnd()*0.4), tw = sum(w); const a = w.map(x=>Math.floor(pts*x/tw)); let r = pts-sum(a); for(let i=0;r>0;i=(i+1)%n,r--) a[i]++; return a; };
+  const spread = (total, ws) => { const tw = sum(ws)||1; const a = ws.map(w=>Math.floor(total*w/tw)); let r = total-sum(a); const order = ws.map((w,i)=>i).sort((x,y)=>ws[y]-ws[x]); for(let i=0;r>0;i=(i+1)%order.length,r--) a[order[i]]++; return a; };
+  let gid = 1;
+  function play(H, A, date, season){
+    const poss = (H.pace+A.pace)/2 + nrm()*3;
+    const eff = (T,O,home) => (T.off + O.def)/2 + (home?1.6:-1.6) + nrm()*6;
+    let ph = Math.round(poss*eff(H,A,true)/100), pa = Math.round(poss*eff(A,H,false)/100);
+    const hq = split(ph,4), vq = split(pa,4);
+    while(ph===pa){ const x = 8+Math.floor(rnd()*7), y = 8+Math.floor(rnd()*7); hq.push(x); vq.push(y); ph+=x; pa+=y; }
+    const g = {id:gid++, date:date.toISOString(), season, done:true, live:false, h:{id:H.id,name:H.name}, v:{id:A.id,name:A.name}, hp:ph, vp:pa, hq, vq};
+    const box = (T, pts) => {
+      const fta = Math.max(8, Math.round(20+nrm()*4)), ftm = Math.round(fta*(.74+rnd()*.1));
+      const fga = Math.max(70, Math.round(poss*.87+nrm()*3)), tpa = Math.round(fga*(T.tpr+nrm()*.03));
+      const tpm = clamp(Math.round(tpa*(T.three+nrm()*.05)), 3, tpa), fgm = Math.max(tpm+10, Math.round((pts-ftm-tpm)/2));
+      const st = {fga, fgm, tpa, tpm, fta, ftm, oreb:Math.max(3,Math.round(10+nrm()*3)), reb:Math.max(30,Math.round(44+nrm()*5)),
+        ast:Math.round(fgm*(.58+rnd()*.1)), to:Math.max(6,Math.round(poss*.13+nrm()*2)), stl:Math.max(2,Math.round(7.5+nrm()*2.5)), blk:Math.max(0,Math.round(5+nrm()*2))};
+      const on = T.squad.map(p => ({p, min: rnd()<.06 ? 0 : Math.max(4, Math.round(p.min+nrm()*4))})).filter(x => x.min>0);
+      const P = k => spread(k==="pts" ? pts : st[k], on.map(x => x.p[k==="pts"?"use":k==="reb"?"reb":k==="ast"?"ast":"three"]*x.min*(0.7+rnd()*0.6)));
+      const pP = P("pts"), pR = P("reb"), pA = P("ast"), p3 = spread(st.tpm, on.map(x => x.p.three*x.min*(0.6+rnd()*0.8)));
+      return {st, players: on.map((x,i) => ({id:x.p.id, name:x.p.name, min:x.min, pts:Math.max(pP[i], p3[i]*3), reb:pR[i], ast:pA[i], tpm:p3[i]}))};
+    };
+    const bh = box(H, ph), ba = box(A, pa);
+    ps[H.id][g.id] = bh; ps[A.id][g.id] = ba;
+    return g;
+  }
+  const today = new Date(); today.setHours(0,0,0,0);
+  const games = [];
+  const round = (dayOff, season, hours) => {
+    const order = teams.slice().sort(()=>rnd()-0.5);
+    for(let i=0;i<order.length;i+=2){ const d = addDays(today, dayOff); d.setHours(hours[(i/2)%hours.length], 0); games.push(play(order[i], order[i+1], d, season)); }
+  };
+  // Vorsaison (für Head to Head) und laufende Saison mit unregelmässigen Abständen, damit es Back-to-backs gibt
+  for(let r=0;r<10;r++) round(-260+r*3, S-1, [2,3]);
+  let day = -1; const curDays = [];
+  for(let r=0;r<22;r++){ curDays.unshift(day); day -= (rnd()<.3 ? 1 : 2); }
+  curDays.forEach(d => round(d, S, [1,2,3,4]));
+  // Kommende Spiele
+  const upcoming = [];
+  [[0,[2,4]],[1,[1,2,3]],[2,[2,4]],[3,[1,3]],[4,[2,3,4]],[5,[1,2]],[6,[3,4]]].forEach(([d,hrs],k) => {
+    const order = teams.slice().sort(()=>rnd()-0.5);
+    hrs.forEach((h,i) => { const dt = addDays(today, d+1); dt.setHours(h, i%2 ? 30 : 0);
+      upcoming.push({id:"d"+k+"-"+i, date:dt.toISOString(), season:S, done:false, live:false, h:{id:order[i*2].id,name:order[i*2].name}, v:{id:order[i*2+1].id,name:order[i*2+1].name}, hp:null, vp:null}); });
+  });
+  const cur = games.filter(g=>g.season===S).concat(upcoming), prev = games.filter(g=>g.season===S-1);
+  const league = {id:"demo", name:"Beispiel-Liga"};
+  return {
+    leagues:[league],
+    calls: () => null,
+    async fixtures(lg, hours){ const to = Date.now()+hours*3600e3; return upcoming.filter(g => new Date(g.date).getTime() < to).map(g => toFixture(g, league)); },
+    async findMatch(lg, hq, aq){
+      const pick = q => { const t = bestTeam(teams, q, t=>[t.name, t.nick]); if(!t) throw new Error(`Kein Beispiel-Team passt zu „${q}“. Versuch z. B. „Gulls - Owls“.`); return {id:t.id, name:t.name}; };
+      const h = pick(hq), a = pick(aq), m = nextMeeting(cur, h, a);
+      return m ? Object.assign(toFixture(m, league), {swapped:m.h.id!==h.id}) : freeFixture(h, a);
+    },
+    async analysis(fx){ return analyzeFromGames(fx, cur, prev, ps); }
+  };
+})();
+
+/* ========== Datenquelle: API-NBA (und API-Basketball für andere Ligen) ========== */
+// Ein Konto bei api-sports.io, ein Schlüssel. Jede Sportart hat aber ein eigenes Tageslimit von 100 Abfragen.
+const apiKey = () => store.get("key","") || (()=>{ try{ return JSON.parse(store.raw("tl:afKey")||'""'); }catch(e){ return ""; } })();
+async function cached(key, ttlMin, fn){
+  const hit = store.get("c:"+key);
+  if(hit && Date.now()-hit.t < ttlMin*60000) return hit.d;
+  const d = await fn();
+  store.set("c:"+key, {t:Date.now(), d});
+  return d;
+}
+function apiSports(base, tag, label, pro){
+  const ck = () => "calls:"+tag+":"+new Date().toISOString().slice(0,10); // api-sports zählt nach UTC-Tag
+  return {
+    calls: () => store.get(ck(), 0),
+    async get(path){
+      const key = apiKey();
+      if(!key) throw new Error("NOKEY");
+      if(!pro && store.get(ck(),0) >= 100) throw new Error(`Tageslimit von 100 Abfragen bei ${label} erreicht. Ab 01:00 Uhr geht es weiter, oder wechsle auf Pro.`);
+      let res;
+      try{ res = await fetch(base+path, {headers:{"x-apisports-key":key}}); }
+      catch(e){ throw new Error("BLOCKED"); }
+      store.set(ck(), store.get(ck(),0)+1);
+      let j; try{ j = await res.json(); }catch(e){ throw new Error(`${label} hat unlesbar geantwortet (Status ${res.status}).`); }
+      const errs = j.errors && (Array.isArray(j.errors) ? j.errors : Object.values(j.errors));
+      if(errs && errs.length){ const t = errs.join(" ");
+        if(/access to this season/i.test(t)) throw new Error(`${label} gibt im Gratis-Paket nur die Saisons 2022 bis 2024 frei, nicht die laufende. Wähle in den Einstellungen „ESPN gratis“ oder „balldontlie gratis“, oder schliesse bei api-sports ein Abo ab.`);
+        throw new Error(`${label} meldet: `+t); }
+      return j.response || [];
+    }
+  };
+}
+const num = x => x==null || x==="" ? null : Number(x);
+const minutes = m => { if(m==null) return 0; const s = String(m); if(s.includes(":")){ const [a,b] = s.split(":"); return (+a||0)+(+b||0)/60; } return +s||0; };
+function makeNBA(pro){
+  const nba = apiSports("https://v2.nba.api-sports.io/", "nba", "API-NBA", pro);
+  const bb = apiSports("https://v1.basketball.api-sports.io/", "bb", "API-Basketball", pro);
+  const NBA = {id:"nba", name:"NBA"};
+  const cNBA = g => {
+    const sc = g.scores||{}, H = sc.home||{}, V = sc.visitors||{}, st = g.status||{};
+    const lq = a => Array.isArray(a) && a.length>=4 && a.every(x=>x!==""&&x!=null) ? a.map(x=>Number(x)||0) : null;
+    return {id:g.id, date:(g.date&&g.date.start)||g.date, season:g.season, done: st.short===3 || /finish/i.test(st.long||""), live: st.short===2,
+      h:{id:g.teams.home.id, name:g.teams.home.name}, v:{id:g.teams.visitors.id, name:g.teams.visitors.name},
+      hp:num(H.points), vp:num(V.points), hq:lq(H.linescore), vq:lq(V.linescore)};
+  };
+  const seasonGames = (S, ttl) => cached("nba:g:"+S, ttl, async () => (await nba.get(`games?league=standard&season=${S}`)).filter(g => g.teams && g.teams.home && g.teams.visitors).map(cNBA));
+  const teams = () => cached("nba:teams", 60*24*30, async () => (await nba.get("teams")).filter(t => t.nbaFranchise && !t.allStar)
+    .map(t => ({id:t.id, name:t.name, nick:t.nickname, city:t.city, code:t.code})));
+  // Spielerstatistik der Saison (eine Abfrage pro Team), daraus auch die Teamwerte pro Spiel
+  const pstats = (teamId, S) => cached("nba:ps:"+teamId+":"+S, 360, async () => {
+    const rows = await nba.get(`players/statistics?team=${teamId}&season=${S}`);
+    const by = {};
+    rows.forEach(r => {
+      const gid = r.game && r.game.id; if(gid==null) return;
+      const b = by[gid] || (by[gid] = {st:{fga:0,fgm:0,tpa:0,tpm:0,fta:0,ftm:0,oreb:0,reb:0,ast:0,to:0,stl:0,blk:0}, players:[]});
+      const v = k => Number(r[k])||0, s = b.st;
+      s.fga+=v("fga"); s.fgm+=v("fgm"); s.tpa+=v("tpa"); s.tpm+=v("tpm"); s.fta+=v("fta"); s.ftm+=v("ftm");
+      s.oreb+=v("offReb"); s.reb+=v("totReb"); s.ast+=v("assists"); s.to+=v("turnovers"); s.stl+=v("steals"); s.blk+=v("blocks");
+      const min = minutes(r.min);
+      if(min>0 && r.player) b.players.push({id:r.player.id, name:((r.player.firstname||"")+" "+(r.player.lastname||"")).trim(), min:Math.round(min*10)/10, pts:v("points"), reb:v("totReb"), ast:v("assists"), tpm:v("tpm")});
+    });
+    const keep = {}; Object.keys(by).sort((a,b)=>b-a).slice(0,15).forEach(k => { if(by[k].st.fga>0) keep[k] = by[k]; });
+    return keep;
+  });
+  // Andere Ligen über API-Basketball (nur Resultate und Viertel)
+  const cBB = g => {
+    const s = g.scores||{}, H = s.home||{}, A = s.away||{}, st = (g.status&&g.status.short)||"";
+    const q = x => { const a = [x.quarter_1,x.quarter_2,x.quarter_3,x.quarter_4]; if(a.some(v=>v==null)) return null; const r = a.map(Number); if(x.over_time) r.push(Number(x.over_time)); return r; };
+    return {id:g.id, date:g.date, season:String(g.league&&g.league.season||""), done:["FT","AOT"].includes(st), live:["Q1","Q2","Q3","Q4","OT","BT","HT"].includes(st),
+      h:{id:g.teams.home.id, name:g.teams.home.name}, v:{id:g.teams.away.id, name:g.teams.away.name}, hp:num(H.total), vp:num(A.total), hq:q(H), vq:q(A)};
+  };
+  const bbGames = lg => cached("bb:g:"+lg.id+":"+lg.season, 180, async () => (await bb.get(`games?league=${lg.id}&season=${encodeURIComponent(lg.season)}&timezone=Europe/Zurich`)).map(cBB));
+  const isBB = lg => lg && lg.kind==="bb";
+  const S = () => seasonYear();
+  return {
+    leagues:[NBA], more:true,
+    calls: () => ({nba:nba.calls(), bb:bb.calls()}),
+    async searchLeagues(q){
+      const r = await bb.get("leagues?search="+encodeURIComponent(q));
+      const now = Date.now();
+      return r.slice(0,12).map(x => { const ss = x.seasons||[];
+        const cur = ss.find(s => new Date(s.start).getTime() <= now && now <= new Date(s.end).getTime()+864e5) || ss[ss.length-1] || {};
+        return {id:x.id, name:x.name, country:x.country&&x.country.name, season:cur.season, kind:"bb"}; });
+    },
+    async fixtures(lg, hours){
+      const to = Date.now()+hours*3600e3, from = Date.now()-3*3600e3;
+      const gs = isBB(lg) ? await bbGames(lg) : await seasonGames(S(), 180);
+      return gs.filter(g => !g.done && new Date(g.date).getTime() > from && new Date(g.date).getTime() < to).map(g => toFixture(g, lg));
+    },
+    async findMatch(lg, hq, aq){
+      let list, gs;
+      if(isBB(lg)){ gs = await bbGames(lg); const m = {}; gs.forEach(g => { m[g.h.id] = g.h; m[g.v.id] = g.v; }); list = Object.values(m).map(t => ({id:t.id, name:t.name})); }
+      else { list = await teams(); gs = await seasonGames(S(), 180); }
+      const pick = q => { const t = bestTeam(list, q, t => [t.name, t.nick, t.city, t.code]);
+        if(!t) throw new Error(`Kein Team gefunden für „${q}“${isBB(lg)?" in "+lg.name:""}. Versuch den Teamnamen, z. B. „Lakers“ oder „Boston“.`); return {id:t.id, name:t.name}; };
+      const h = pick(hq), a = pick(aq), m = nextMeeting(gs, h, a);
+      return m ? Object.assign(toFixture(m, lg), {swapped:m.h.id!==h.id}) : freeFixture(h, a, {lg:lg.id});
+    },
+    async analysis(fx){
+      const lg = state.leagueById(fx.lg);
+      if(isBB(lg)) return analyzeFromGames(fx, await bbGames(lg), [], null);
+      const s = S();
+      const cur = await seasonGames(s, 180);
+      const prev = await seasonGames(s-1, 60*24*30).catch(() => []);
+      const [pH, pA] = await Promise.all([pstats(fx.home.id, s), pstats(fx.away.id, s)]);
+      return analyzeFromGames(fx, cur, prev, {[fx.home.id]:pH, [fx.away.id]:pA});
+    }
+  };
+}
+
+/* ========== Datenquelle: ESPN (inoffiziell, gratis, ohne Schlüssel) ========== */
+function makeESPN(){
+  const base = "https://site.api.espn.com/apis/site/v2/sports/basketball/nba/";
+  const NBA = {id:"nba", name:"NBA"};
+  async function get(path){
+    let res;
+    try{ res = await fetch(base+path); }
+    catch(e){ throw new Error("BLOCKED"); }
+    if(!res.ok) throw new Error("ESPN antwortet mit Status "+res.status+". Versuch es später nochmals.");
+    return res.json();
+  }
+  const sv = x => x==null ? null : typeof x==="object" ? num(x.value ?? x.displayValue) : num(x);
+  const espnDay = d => ymd(d).replace(/-/g,"");
+  // ESPN nennt die Saison nach dem Endjahr: 2026/27 = 2027
+  const espnSeason = () => seasonYear()+1;
+  function cE(ev){
+    const c = ev.competitions && ev.competitions[0]; if(!c || !c.competitors) return null;
+    const H = c.competitors.find(x => x.homeAway==="home"), V = c.competitors.find(x => x.homeAway==="away");
+    if(!H || !V || !H.team || !V.team) return null;
+    const st = ((c.status || ev.status || {}).type) || {};
+    const lq = x => Array.isArray(x.linescores) && x.linescores.length>=4 ? x.linescores.map(l => sv(l.value ?? l.displayValue) || 0) : null;
+    const tm = x => ({id:+x.team.id, name:x.team.displayName || x.team.name});
+    const done = !!st.completed;
+    return {id:String(ev.id), date:ev.date, season:espnSeason()===((ev.season&&ev.season.year)||espnSeason()) ? seasonYear() : seasonYear()-1, done, live:st.state==="in",
+      h:tm(H), v:tm(V), hp:done?sv(H.score):null, vp:done?sv(V.score):null, hq:done?lq(H):null, vq:done?lq(V):null, pre:ev.season&&ev.season.type===1};
+  }
+  const teams = () => cached("espn:teams", 60*24*30, async () => {
+    const j = await get("teams");
+    return (((j.sports||[])[0]||{}).leagues||[{}])[0].teams.map(t => t.team).map(t => ({id:+t.id, name:t.displayName, nick:t.name, city:t.location, code:t.abbreviation}));
+  });
+  const day = d => { const key = espnDay(d), isOld = d < addDays(new Date(),-1);
+    return cached("espn:d:"+key, isOld ? 60*24 : 20, async () => ((await get("scoreboard?dates="+key)).events||[]).map(cE).filter(Boolean)); };
+  const sched = (teamId, Y, ttl) => cached("espn:t:"+teamId+":"+Y, ttl, async () => ((await get(`teams/${teamId}/schedule?season=${Y}`)).events||[]).map(cE).filter(g => g && !g.pre));
+  // Boxscore eines beendeten Spiels: Viertel und Spielerwerte. Ändert sich nicht mehr, darum lange zwischengespeichert.
+  const summary = gid => cached("espn:s:"+gid, 60*24*30, async () => {
+    const j = await get("summary?event="+gid);
+    const out = {q:{}, ps:{}};
+    const comp = j.header && j.header.competitions && j.header.competitions[0];
+    if(comp) comp.competitors.forEach(c => { const l = (c.linescores||[]).map(x => sv(x.value ?? x.displayValue) || 0); if(l.length>=4) out.q[+(c.id || c.team.id)] = l; });
+    ((j.boxscore||{}).players||[]).forEach(tp => {
+      const sec = (tp.statistics||[])[0]; if(!sec) return;
+      const L = (sec.labels || sec.names || []).map(x => String(x).toUpperCase()), ix = k => L.indexOf(k);
+      const st = {fga:0,fgm:0,tpa:0,tpm:0,fta:0,ftm:0,oreb:0,reb:0,ast:0,to:0,stl:0,blk:0}, players = [];
+      const pair = (v) => { const m = String(v||"").split("-"); return [Number(m[0])||0, Number(m[1])||0]; };
+      (sec.athletes||[]).forEach(a => {
+        const v = a.stats || []; if(!v.length || a.didNotPlay) return;
+        const g = k => ix(k)>=0 ? Number(v[ix(k)])||0 : 0;
+        const [fgm,fga] = pair(v[ix("FG")]), [tpm,tpa] = pair(v[ix("3PT")]), [ftm,fta] = pair(v[ix("FT")]);
+        const min = minutes(v[ix("MIN")]);
+        st.fga+=fga; st.fgm+=fgm; st.tpa+=tpa; st.tpm+=tpm; st.fta+=fta; st.ftm+=ftm;
+        st.oreb+=g("OREB"); st.reb+=g("REB"); st.ast+=g("AST"); st.to+=g("TO"); st.stl+=g("STL"); st.blk+=g("BLK");
+        if(min>0) players.push({id:+a.athlete.id, name:a.athlete.displayName || a.athlete.shortName, min:Math.round(min*10)/10, pts:g("PTS"), reb:g("REB"), ast:g("AST"), tpm});
+      });
+      if(st.fga>0) out.ps[+tp.team.id] = {st, players};
+    });
+    return out;
+  });
+  return {
+    leagues:[NBA], calls: () => null,
+    async fixtures(lg, hours){
+      const days = Math.ceil(hours/24)+1, ds = [];
+      for(let i=-1;i<=days;i++) ds.push(addDays(new Date(), i));
+      const all = (await Promise.all(ds.map(day))).flat();
+      const to = Date.now()+hours*3600e3, from = Date.now()-3*3600e3, seen = new Set();
+      return all.filter(g => !g.done && !seen.has(g.id) && seen.add(g.id) && new Date(g.date).getTime() > from && new Date(g.date).getTime() < to).map(g => toFixture(g, NBA));
+    },
+    async findMatch(lg, hq, aq){
+      const list = await teams();
+      const pick = q => { const t = bestTeam(list, q, t => [t.name, t.nick, t.city, t.code]); if(!t) throw new Error(`Kein NBA-Team gefunden für „${q}“.`); return {id:t.id, name:t.name}; };
+      const h = pick(hq), a = pick(aq), m = nextMeeting(await sched(h.id, espnSeason(), 180), h, a);
+      return m ? Object.assign(toFixture(m, NBA), {swapped:m.h.id!==h.id}) : freeFixture(h, a, {lg:"nba"});
+    },
+    async analysis(fx){
+      const Y = espnSeason();
+      const [gh, ga] = await Promise.all([sched(fx.home.id, Y, 180), sched(fx.away.id, Y, 180)]);
+      const prev = await sched(fx.home.id, Y-1, 60*24*30).catch(() => []);
+      const seen = new Set(), cur = gh.concat(ga).filter(g => !seen.has(g.id) && seen.add(g.id));
+      // Für die letzten 10 Spiele beider Teams die Boxscores holen (beim zweiten Mal aus dem Zwischenspeicher)
+      const lastOf = id => cur.concat(prev).filter(g => g.done && (g.h.id===id || g.v.id===id) && new Date(g.date) < new Date(fx.date)).sort((x,y)=>new Date(y.date)-new Date(x.date)).slice(0,10);
+      const need = [...new Map(lastOf(fx.home.id).concat(lastOf(fx.away.id)).map(g => [g.id, g])).values()];
+      const sums = await Promise.all(need.map(g => summary(g.id).catch(() => null)));
+      const ps = {};
+      need.forEach((g, i) => { const s = sums[i]; if(!s) return;
+        if(s.q[g.h.id]) g.hq = s.q[g.h.id]; if(s.q[g.v.id]) g.vq = s.q[g.v.id];
+        Object.keys(s.ps).forEach(t => { (ps[t] || (ps[t] = {}))[g.id] = s.ps[t]; }); });
+      return analyzeFromGames(fx, cur, prev, ps);
+    }
+  };
+}
+
+/* ========== Datenquelle: balldontlie ========== */
+function makeBDL(){
+  const base = "https://api.balldontlie.io/v1/";
+  const NBA = {id:"nba", name:"NBA"};
+  async function get(path){
+    const key = store.get("bdlKey","");
+    if(!key) throw new Error("NOKEY");
+    let res;
+    try{ res = await fetch(base+path, {headers:{"Authorization":key}}); }
+    catch(e){ throw new Error("BLOCKED"); }
+    if(res.status===429) throw new Error("balldontlie erlaubt gratis 5 Abfragen pro Minute. Warte eine Minute und tippe nochmals.");
+    if(res.status===401) throw new Error("balldontlie lehnt den Schlüssel ab. Prüfe ihn in den Einstellungen.");
+    const j = await res.json().catch(() => ({}));
+    if(!res.ok) throw new Error("balldontlie meldet: "+(j.message||j.error||res.status));
+    return j.data || [];
+  }
+  const cG = g => {
+    const q = s => { const a = [1,2,3,4].map(i => g[s+"_q"+i]); if(!a.every(x => typeof x==="number")) return null;
+      return a.concat([1,2,3].map(i => g[s+"_ot"+i]).filter(x => typeof x==="number" && x>0)); };
+    const date = g.datetime || (/^\d{4}-\d\d-\d\dT/.test(g.status||"") ? g.status : (g.date||"").slice(0,10)+"T23:00:00Z");
+    return {id:g.id, date, season:g.season, done:g.status==="Final", live:g.status!=="Final" && g.period>0,
+      h:{id:g.home_team.id, name:g.home_team.full_name}, v:{id:g.visitor_team.id, name:g.visitor_team.full_name},
+      hp:g.status==="Final"?g.home_team_score:null, vp:g.status==="Final"?g.visitor_team_score:null, hq:q("home"), vq:q("visitor")};
+  };
+  const teams = () => cached("bdl:teams", 60*24*30, async () => (await get("teams")).filter(t => t.id<=30 && t.conference)
+    .map(t => ({id:t.id, name:t.full_name, nick:t.name, city:t.city, code:t.abbreviation})));
+  const teamSeason = (id, S, ttl) => cached("bdl:t:"+id+":"+S, ttl, async () => (await get(`games?team_ids[]=${id}&seasons[]=${S}&per_page=100`)).map(cG));
+  return {
+    leagues:[NBA], calls: () => null,
+    async fixtures(lg, hours){
+      const gs = await cached("bdl:fx:"+ymd(new Date()), 180, async () => (await get(`games?start_date=${ymd(addDays(new Date(),-1))}&end_date=${ymd(addDays(new Date(),8))}&per_page=100`)).map(cG));
+      const to = Date.now()+hours*3600e3, from = Date.now()-3*3600e3;
+      return gs.filter(g => !g.done && new Date(g.date).getTime() > from && new Date(g.date).getTime() < to).map(g => toFixture(g, NBA));
+    },
+    async findMatch(lg, hq, aq){
+      const list = await teams();
+      const pick = q => { const t = bestTeam(list, q, t => [t.name, t.nick, t.city, t.code]); if(!t) throw new Error(`Kein NBA-Team gefunden für „${q}“.`); return {id:t.id, name:t.name}; };
+      const h = pick(hq), a = pick(aq), m = nextMeeting(await teamSeason(h.id, seasonYear(), 180), h, a);
+      return m ? Object.assign(toFixture(m, NBA), {swapped:m.h.id!==h.id}) : freeFixture(h, a, {lg:"nba"});
+    },
+    async analysis(fx){
+      const S = seasonYear();
+      const gh = await teamSeason(fx.home.id, S, 180), ga = await teamSeason(fx.away.id, S, 180);
+      const prev = await teamSeason(fx.home.id, S-1, 60*24*30).catch(() => []);
+      const seen = new Set(), cur = gh.concat(ga).filter(g => !seen.has(g.id) && seen.add(g.id));
+      return analyzeFromGames(fx, cur, prev, null);
+    }
+  };
+}
+
+/* ========== Zustand und Oberfläche ========== */
+const state = { src: store.get("src","demo"), league:null, range:72, fixtures:[], customLeagues: store.get("customLeagues", []),
+  leagueById(id){ return leagueList().find(l => String(l.id)===String(id)) || source.leagues[0]; } };
+let source;
+const SRC_LABEL = {demo:"Beispieldaten", espn:"ESPN", "nba-pro":"API-NBA", bdl:"balldontlie"};
+function setSource(){
+  if(state.src==="nba-free"){ state.src = "espn"; store.set("src","espn"); } // API-NBA gratis hat keine laufende Saison
+  if(!SRC_LABEL[state.src]) state.src = "demo";
+  source = state.src==="demo" ? Demo : state.src==="bdl" ? makeBDL() : state.src==="espn" ? makeESPN() : makeNBA(true);
+  const chip = $("#srcChip");
+  chip.textContent = SRC_LABEL[state.src];
+  chip.classList.toggle("demo", state.src==="demo");
+  state.league = source.leagues[0];
+}
+function leagueList(){ return source.more ? source.leagues.concat(state.customLeagues) : source.leagues.slice(); }
+function renderChips(){
+  const box = $("#leagueChips"), ls = leagueList();
+  let html = ls.map((l,i) => `<button class="chip" type="button" data-i="${i}" aria-pressed="${state.league && String(state.league.id)===String(l.id)}">${esc(l.name)}</button>`).join("");
+  if(source.more) html += `<button class="chip" type="button" data-i="other" aria-pressed="${$("#otherLeague").hidden?"false":"true"}">+ Andere Ligen</button>`;
+  box.innerHTML = html;
+  box.querySelectorAll(".chip").forEach(b => b.onclick = () => {
+    if(b.dataset.i==="other"){ $("#otherLeague").hidden = !$("#otherLeague").hidden; renderChips(); return; }
+    state.league = ls[+b.dataset.i]; $("#otherLeague").hidden = true; renderChips(); loadFixtures();
+  });
+}
+async function searchLeagues(){
+  const q = $("#leagueSearch").value.trim(), box = $("#leagueResults");
+  if(q.length<3){ box.innerHTML = `<span class="small muted">Mindestens 3 Buchstaben eingeben.</span>`; return; }
+  box.innerHTML = `<span class="small muted"><span class="spin"></span> Suche …</span>`;
+  try{
+    const r = await source.searchLeagues(q);
+    box.innerHTML = r.length ? r.map((l,i)=>`<button class="fx" type="button" data-k="${i}" style="grid-template-columns:1fr auto"><div class="m"><span>${esc(l.name)}</span><small class="muted">${esc(l.country)} · Saison ${esc(l.season)}</small></div><span class="go">Hinzufügen</span></button>`).join("")
+      : `<span class="small muted">Nichts gefunden.</span>`;
+    box.querySelectorAll("[data-k]").forEach(b => b.onclick = () => {
+      const l = r[+b.dataset.k];
+      if(!state.customLeagues.some(c => c.id===l.id)){ state.customLeagues.push(l); store.set("customLeagues", state.customLeagues); }
+      state.league = l; $("#otherLeague").hidden = true; renderChips(); loadFixtures();
+    });
+  }catch(e){ box.innerHTML = errorBox(e); }
+  renderBudget();
+}
+function errorBox(e){
+  const m = e.message;
+  if(m==="NOKEY") return `<div class="note"><b>Schlüssel fehlt.</b> Öffne die Einstellungen und füge deinen Schlüssel ein, oder wähle „Beispieldaten“.</div>`;
+  if(m==="BLOCKED") return `<div class="note err"><b>Keine Verbindung zum Datenanbieter.</b> Prüfe die Internetverbindung. In der Vorschau auf claude.ai sind Live-Daten gesperrt: Öffne die App über deine eigene Adresse (siehe Anleitung), dort funktioniert es.</div>`;
+  return `<div class="note err"><b>Fehler.</b> ${esc(m)}</div>`;
+}
+function renderBudget(){
+  const c = source.calls();
+  if(!c){ $("#budget").innerHTML = ""; return; }
+  const lim = state.src==="nba-free" ? "/100" : "";
+  $("#budget").innerHTML = `Heute verbraucht: API-NBA <span class="num">${c.nba}${lim}</span>` + (c.bb ? ` · API-Basketball <span class="num">${c.bb}${lim}</span>` : "") + `. Bereits geladene Daten kosten nichts.`;
+}
+async function loadFixtures(){
+  const box = $("#fixtures");
+  box.innerHTML = `<div class="empty"><span class="spin"></span> Spiele werden geladen …</div>`;
+  try{ state.fixtures = await source.fixtures(state.league, state.range); renderFixtures(); }
+  catch(e){ box.innerHTML = errorBox(e); }
+  renderBudget();
+}
+function renderFixtures(){
+  const box = $("#fixtures");
+  const to = Date.now()+state.range*3600e3;
+  const list = state.fixtures.filter(f => new Date(f.date).getTime() < to).sort((a,b)=>new Date(a.date)-new Date(b.date));
+  let html = "";
+  if(state.src==="demo") html += `<div class="note"><b>Beispieldaten.</b> Erfundene Teams und Spieler, damit du die App ohne Schlüssel ausprobieren kannst. Echte NBA-Spiele kommen, sobald du in den Einstellungen eine Datenquelle wählst.</div>`;
+  if(!list.length){ box.innerHTML = html + `<div class="empty">In diesem Zeitraum sind keine Spiele angesetzt.</div>`; return; }
+  if(state.src==="nba-pro") html += `<button class="btn ghost" id="bulk" type="button">Alle ${list.length} Spiele vorab analysieren</button><div id="bulkInfo" class="small muted"></div>`;
+  let lastDay = "";
+  list.forEach(f => {
+    const d = new Date(f.date), dn = dayName(d);
+    if(dn!==lastDay){ html += `<div class="day">${esc(dn)}</div>`; lastDay = dn; }
+    const cached = !!store.get("ana:"+f.id);
+    html += `<button class="fx" type="button" data-id="${esc(f.id)}"><span class="t">${timeStr(d)}</span><span class="m"><span>${esc(f.home.name)} <small>Heim</small></span><span>${esc(f.away.name)}</span></span><span class="go${f.live?" live":""}">${f.live?"Läuft":cached?"Analyse ✓":"Analyse"}</span></button>`;
+  });
+  box.innerHTML = html;
+  box.querySelectorAll(".fx[data-id]").forEach(b => b.onclick = () => openMatch(list.find(f => String(f.id)===b.dataset.id)));
+  const bulk = $("#bulk");
+  if(bulk) bulk.onclick = async () => {
+    bulk.disabled = true; let k = 0;
+    for(const f of list){ $("#bulkInfo").textContent = `Analysiere ${++k}/${list.length}: ${f.home.name} – ${f.away.name}`;
+      try{ await source.analysis(f); store.set("ana:"+f.id, 1); }catch(e){ $("#bulkInfo").textContent = e.message; break; } }
+    renderBudget(); renderFixtures();
+  };
+}
+
+/* ---------- Analysebogen ---------- */
+function meterRow(name, sub, p, alt){
+  return `<div class="prow"><span class="n">${name} ${sub?`<small>${esc(sub)}</small>`:""}</span><span class="meter${alt?" alt":""}"><i style="width:${Math.round(p*100)}%"></i></span><span class="p">${pct(p)}</span></div>`;
+}
+function formChips(f){ return `<span class="form">${f.res.map(r=>`<span class="${r}">${r==="W"?"S":"N"}</span>`).join("")||'<span class="muted small">keine Daten</span>'}</span>`; }
+function linesTable(title, o){
+  return `<table class="tbl"><thead><tr><th>${esc(title)}</th><th class="r">Über</th><th class="r">Unter</th></tr></thead><tbody>${o.map(x=>`<tr><td class="num">${x.l.toFixed(1)}</td><td class="r">${pct(x.p)}</td><td class="r">${pct(1-x.p)}</td></tr>`).join("")}</tbody></table>`;
+}
+const pName = p => esc(p.name) + (p.missed>=1 ? `<span class="tag">fehlte zuletzt</span>` : "");
+function playerBlock(a, key, title, sub, alt){
+  const side = (pl, team, isAlt) => {
+    if(!pl || !pl.length) return `<div><h3>${esc(team)}</h3><p class="small muted">Keine Spielerdaten.</p></div>`;
+    const top = pl.filter(p => p[key] > 0.02).sort((x,y)=>y[key]-x[key]).slice(0,5);
+    return `<div class="rows"><h3>${esc(team)}</h3>${top.length ? top.map(p => meterRow(pName(p), sub(p), p[key], isAlt)).join("") : '<p class="small muted">Niemand mit nennenswerter Chance.</p>'}</div>`;
+  };
+  return `<section class="card"><h2>${title}</h2><div class="teamcols">${side(a.plH,a.fx.home.name,false)}${side(a.plA,a.fx.away.name,true)}</div></section>`;
+}
+function projTable(pl, team){
+  if(!pl || !pl.length) return `<div><h3>${esc(team)}</h3><p class="small muted">Keine Spielerdaten.</p></div>`;
+  const top = pl.slice().sort((x,y)=>y.mins-x.mins).slice(0,8);
+  return `<div><h3>${esc(team)}</h3><div class="scroll"><table class="tbl"><thead><tr><th>Spieler</th><th class="r">Min</th><th class="r">Pkt</th><th class="r">Reb</th><th class="r">Ast</th><th class="r">3er</th></tr></thead><tbody>
+    ${top.map(p=>`<tr><td class="nm">${pName(p)}</td><td class="r">${f0(p.mins)}</td><td class="r">${f1(p.pts)}</td><td class="r">${f1(p.reb)}</td><td class="r">${f1(p.ast)}</td><td class="r">${f1(p.tpm)}</td></tr>`).join("")}</tbody></table></div></div>`;
+}
+function renderAnalysis(a){
+  const fx = a.fx, d = new Date(fx.date), H = fx.home.name, A = fx.away.name;
+  const rec = r => `${r.w}-${r.l}`;
+  let h = `<button class="back" id="back" type="button">← Zurück zu den Spielen</button>
+  <section class="card">
+    <div class="small muted">${fx.free ? "Freie Abfrage: kein angesetztes Spiel gefunden, gerechnet mit "+esc(H)+" als Heimteam" : esc(fx.league)+" · "+esc(dayName(d))+", "+timeStr(d)}</div>
+    ${fx.swapped ? `<div class="note"><b>Hinweis.</b> Im Spielplan ist ${esc(H)} das Heimteam. Die Analyse folgt dem Spielplan.</div>` : ""}
+    <div class="head"><div class="team">${esc(H)}<small>${rec(a.recH)} · ${esc(a.restH.txt)}</small></div><div><div class="xg">${f0(a.lamH)} : ${f0(a.lamA)}</div><div class="vs">erwartet</div></div><div class="team">${esc(A)}<small>${rec(a.recA)} · ${esc(a.restA.txt)}</small></div></div>
+    <div class="tri" aria-label="Siegchance"><div class="h" style="width:${a.pH*100}%">${pct(a.pH)}</div><div class="a" style="width:${a.pA*100}%">${pct(a.pA)}</div></div>
+    <div class="legend"><span>Sieg ${esc(H)}</span><span>Sieg ${esc(A)}</span></div>
+    ${(a.nH<5||a.nA<5) ? `<div class="note"><b>Wenig Daten.</b> Nur ${Math.min(a.nH,a.nA)} gespielte Partien gefunden, die Prognose ist entsprechend unsicher.</div>` : ""}
+  </section>
+  <section class="card"><h2>Punkte</h2>
+    <div class="grid2">
+      <div class="kpi"><span class="l">Total erwartet</span><span class="v">${f1(a.lamH+a.lamA)}</span></div>
+      <div class="kpi"><span class="l">Differenz</span><span class="v">${(a.lamH>=a.lamA?"+":"")}${f1(a.lamH-a.lamA)}</span></div>
+      <div class="kpi"><span class="l">Knapp (≤ 5 Pkt.)</span><span class="v">${pct(a.pClose)}</span></div>
+      <div class="kpi"><span class="l">Deutlich (≥ 15)</span><span class="v">${pct(a.pBlow)}</span></div>
+    </div>
+    <div class="scroll">${linesTable("Total Punkte", a.totLines)}</div>
+    <h3>Handicap</h3>
+    <div class="scroll"><table class="tbl"><thead><tr><th>Linie</th><th class="r">${esc(H)}</th><th class="r">${esc(A)}</th></tr></thead><tbody>
+      ${a.spread.map(s => `<tr><td class="num">${esc(H)} ${s.l>0?"−":"+"}${Math.abs(s.l).toFixed(1)}</td><td class="r">${pct(s.p)}</td><td class="r">${pct(1-s.p)}</td></tr>`).join("")}</tbody></table></div>
+    <p class="small muted" style="margin:0">„${esc(H)} −4.5“ heisst: ${esc(H)} gewinnt mit 5 oder mehr Punkten. „+4.5“ heisst: verliert höchstens mit 4 oder gewinnt.</p>
+  </section>`;
+  if(a.hasQ){
+    h += `<section class="card"><h2>Halbzeit und Viertel</h2>
+      <div class="grid2">
+        <div class="kpi"><span class="l">Pausenstand erwartet</span><span class="v">${f0(a.h1H)} : ${f0(a.h1A)}</span></div>
+        <div class="kpi"><span class="l">${esc(H)} führt zur Pause</span><span class="v">${pct(a.pHalfH)}</span></div>
+        <div class="kpi"><span class="l">1. Viertel</span><span class="v">${f0(a.q1H)} : ${f0(a.q1A)}</span></div>
+        <div class="kpi"><span class="l">4. Viertel</span><span class="v">${f0(a.q4H)} : ${f0(a.q4A)}</span></div>
+      </div>
+      <div class="teamcols"><div class="scroll">${linesTable("1. Halbzeit", a.h1Lines)}</div><div class="scroll">${linesTable("1. Viertel", a.q1Lines)}</div></div>
+      <p class="small muted" style="margin:0">Verlängerungen in den letzten 10 Spielen: ${esc(H)} ${a.otH}, ${esc(A)} ${a.otA}.</p>
+    </section>`;
+  }
+  h += `<section class="card"><h2>Form und Bilanz</h2>
+    <div class="scroll"><table class="tbl"><thead><tr><th></th><th class="r">${esc(H)}</th><th class="r">${esc(A)}</th></tr></thead><tbody>
+      <tr><td>Saison</td><td class="r">${rec(a.recH)}</td><td class="r">${rec(a.recA)}</td></tr>
+      <tr><td>Heim / Auswärts</td><td class="r">${a.recH.hw}-${a.recH.hl} heim</td><td class="r">${a.recA.aw}-${a.recA.al} ausw.</td></tr>
+      <tr><td>Letzte 10</td><td class="r">${a.recH.l10w}-${a.recH.l10l}</td><td class="r">${a.recA.l10w}-${a.recA.l10l}</td></tr>
+      <tr><td>Serie</td><td class="r">${esc(a.recH.streak)}</td><td class="r">${esc(a.recA.streak)}</td></tr>
+      <tr><td>Pause vor dem Spiel</td><td class="r">${esc(a.restH.txt)}</td><td class="r">${esc(a.restA.txt)}</td></tr>
+    </tbody></table></div>
+    ${[[H,a.formH,"Heim"],[A,a.formA,"Auswärts"]].map(([n,f,v]) => `<h3>${esc(n)}</h3>
+      <div class="formrow"><span class="small muted">Gesamt</span>${formChips(f.all)}<span class="num small" style="text-align:right">${f1(f.all.pf)} : ${f1(f.all.pa)}</span></div>
+      <div class="formrow"><span class="small muted">${v}</span>${formChips(f.ven)}<span class="num small" style="text-align:right">${f1(f.ven.pf)} : ${f1(f.ven.pa)}</span></div>`).join("")}
+    <p class="small muted" style="margin:0">Letzte 5 Spiele, neuestes links. S = Sieg, N = Niederlage. Rechts Punkte pro Spiel erzielt : kassiert. Serie S3 = drei Siege in Folge.</p>
+  </section>
+  <section class="card"><h2>Head to Head</h2>
+    ${a.h2h.length ? (()=>{ const w = a.h2h.filter(m => (m.homeId===fx.home.id ? m.hp>m.vp : m.vp>m.hp)).length;
+      return `<div class="small"><b>${esc(H)}</b> ${w} Siege · ${a.h2h.length-w} Niederlagen · Ø ${f1(avg(a.h2h.map(m=>m.hp+m.vp)))} Punkte total</div>
+      <div class="scroll"><table class="tbl"><tbody>${a.h2h.map(m=>`<tr><td class="num small">${new Date(m.date).toLocaleDateString("de-CH")}</td><td>${esc(m.home)}</td><td class="r">${m.hp}:${m.vp}${m.ot?" n.V.":""}</td><td>${esc(m.away)}</td></tr>`).join("")}</tbody></table></div>`; })()
+      : `<p class="small muted">Keine direkten Duelle in dieser und der letzten Saison gefunden.</p>`}
+  </section>`;
+  if(a.hasSt){
+    const r = (lbl, oh, oa, fmt) => `<tr><td>${lbl}</td><td class="r">${fmt(oh)}</td><td class="r">${fmt(oa)}</td></tr>`;
+    const p1 = x => x==null ? "–" : (x*100).toFixed(1)+"%";
+    const s = a.st, v = a.adv;
+    h += `<section class="card"><h2>Teamwerte</h2>
+      <div class="grid2">
+        <div class="kpi"><span class="l">Tempo erwartet</span><span class="v">${f1(v.pace)}</span></div>
+        <div class="kpi"><span class="l">Dreier total</span><span class="v">${f1(s.tpm.h+s.tpm.a)}</span></div>
+        <div class="kpi"><span class="l">Rebounds total</span><span class="v">${f1(s.reb.h+s.reb.a)}</span></div>
+      </div>
+      <div class="scroll"><table class="tbl"><thead><tr><th>Ø letzte 10</th><th class="r">${esc(H)}</th><th class="r">${esc(A)}</th></tr></thead><tbody>
+        ${r("Ballbesitze (Tempo)", v.paceH, v.paceA, f1)}
+        ${r("Punkte pro 100 Angriffe", v.ortgH, v.ortgA, f1)}
+        ${r("Zugelassen pro 100", v.drtgH, v.drtgA, f1)}
+        ${r("Wurfquote", v.fgH, v.fgA, p1)}
+        ${r("Dreier getroffen", s.tpm.oh, s.tpm.oa, f1)}
+        ${r("Dreierquote", v.fg3H, v.fg3A, p1)}
+        ${r("Rebounds", s.reb.oh, s.reb.oa, f1)}
+        ${r("Offensiv-Rebounds", s.oreb.oh, s.oreb.oa, f1)}
+        ${r("Assists", s.ast.oh, s.ast.oa, f1)}
+        ${r("Ballverluste", s.to.oh, s.to.oa, f1)}
+        ${r("Steals", s.stl.oh, s.stl.oa, f1)}
+        ${r("Blocks", s.blk.oh, s.blk.oa, f1)}
+      </tbody></table></div>
+      <div class="teamcols"><div class="scroll">${linesTable("Dreier total", a.tpmLines)}</div><div class="scroll">${linesTable("Rebounds total", a.rebLines)}</div></div>
+    </section>`;
+  } else {
+    h += `<div class="note"><b>Teamwerte und Spieler</b> (Rebounds, Assists, Dreier, Tempo, Spielerprognosen) liefert diese Datenquelle nicht. Dafür in den Einstellungen „ESPN gratis“ wählen.</div>`;
+  }
+  if(a.plH || a.plA){
+    h += `<section class="card"><h2>Spielerprognose</h2><div class="teamcols">${projTable(a.plH,H)}${projTable(a.plA,A)}</div>
+      <p class="small muted" style="margin:0">Erwartete Werte für dieses Spiel: Minuten, Punkte, Rebounds, Assists, getroffene Dreier.</p></section>`;
+    const sub = p => `Ø ${f1(p.aPts)} Pkt in ${p.gp} Sp.`;
+    h += playerBlock(a, "p20", "20+ Punkte", sub);
+    h += playerBlock(a, "pDD", "Double-Double", p => `Ø ${f1(p.pts)} Pkt · ${f1(p.reb)} Reb · ${f1(p.ast)} Ast`);
+    h += playerBlock(a, "p3", "3+ Dreier", p => `erwartet ${f1(p.tpm)}`);
+    h += playerBlock(a, "pReb10", "10+ Rebounds", p => `erwartet ${f1(p.reb)}`);
+    h += playerBlock(a, "pAst8", "8+ Assists", p => `erwartet ${f1(p.ast)}`);
+  }
+  h += `<section class="card explain"><details><summary>So rechnet die App</summary>
+    <p><b>Erwartete Punkte:</b> Für jedes Team zählen die letzten 10 Spiele. Angriff von ${esc(H)} (Punkte pro Heimspiel) und Abwehr von ${esc(A)} (zugelassene Punkte pro Auswärtsspiel) werden gemittelt, umgekehrt genauso. Bei wenigen Heim- oder Auswärtsspielen zählt die Gesamtform stärker. Ein Team im Back-to-back (zweites Spiel innert 36 Stunden) bekommt 1,5 Punkte Abzug.</p>
+    <p><b>Normalverteilung:</b> NBA-Resultate streuen um etwa 12,5 Punkte bei der Differenz und 18 Punkte beim Total. Daraus kommen Siegchance, Handicap und Über/Unter. Halbzeit und Viertel laufen genauso mit kleinerer Streuung.</p>
+    <p><b>Spieler:</b> Punkte, Rebounds, Assists und Dreier pro Minute aus den letzten 10 Spielen, mal die Minuten, die er zuletzt im Schnitt gespielt hat, angepasst an die erwartete Punktzahl seines Teams. „Fehlte zuletzt“ heisst: im letzten Spiel nicht eingesetzt, eventuell verletzt.</p>
+    <p><b>Grenzen:</b> Verletzungslisten, Ruhepausen von Stars, Trades und Playoff-Motivation fehlen. Prüfe vor dem Spiel den Injury Report. Nutze die Zahlen als Orientierung.</p></details></section>`;
+  return h;
+}
+async function openMatch(fx){
+  $("#listView").hidden = true; const v = $("#detailView"); v.hidden = false; window.scrollTo(0,0);
+  v.innerHTML = `<button class="back" id="back" type="button">← Zurück zu den Spielen</button><div class="empty"><span class="spin"></span> Analyse wird erstellt …</div>`;
+  $("#back").onclick = closeMatch;
+  try{ const a = await source.analysis(fx); store.set("ana:"+fx.id, 1); v.innerHTML = renderAnalysis(a); }
+  catch(e){ console.error(e); v.innerHTML = `<button class="back" id="back" type="button">← Zurück zu den Spielen</button>` + errorBox(e); }
+  $("#back").onclick = closeMatch; renderBudget();
+}
+function closeMatch(){ $("#detailView").hidden = true; $("#listView").hidden = false; renderFixtures(); }
+
+/* ---------- Einstellungen ---------- */
+function syncSettings(){
+  document.querySelectorAll('input[name="src"]').forEach(r => r.checked = r.value===state.src);
+  $("#keyField").hidden = !state.src.startsWith("nba"); $("#bdlKeyField").hidden = state.src!=="bdl";
+  $("#apiKey").value = apiKey(); $("#bdlKey").value = store.get("bdlKey","");
+}
+$("#openSettings").onclick = () => { syncSettings(); $("#sheet").hidden = false; };
+$("#closeSettings").onclick = () => { $("#sheet").hidden = true; boot(); };
+$("#sheet").onclick = e => { if(e.target.id==="sheet"){ $("#sheet").hidden = true; boot(); } };
+document.querySelectorAll('input[name="src"]').forEach(r => r.onchange = () => { state.src = r.value; store.set("src", r.value); syncSettings(); });
+$("#apiKey").oninput = e => store.set("key", e.target.value.trim());
+$("#bdlKey").oninput = e => store.set("bdlKey", e.target.value.trim());
+$("#clearCache").onclick = () => {
+  try{ Object.keys(localStorage).filter(k => /^kl:(c:|ana:)/.test(k)).forEach(k => localStorage.removeItem(k)); }catch(e){}
+  $("#cacheInfo").textContent = "Geleert.";
+};
+$("#rangeSeg").querySelectorAll("button").forEach(b => b.onclick = () => {
+  state.range = +b.dataset.r; $("#rangeSeg").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", x===b)); loadFixtures();
+});
+$("#leagueSearchBtn").onclick = searchLeagues;
+$("#leagueSearch").onkeydown = e => { if(e.key==="Enter") searchLeagues(); };
+$("#matchForm").onsubmit = async e => {
+  e.preventDefault();
+  const msg = $("#matchMsg"), q = $("#matchQuery").value.trim();
+  if(!q) return;
+  msg.innerHTML = `<span class="small muted"><span class="spin"></span> Teams werden gesucht …</span>`;
+  try{ const [hq, aq] = splitQuery(q); const fx = await source.findMatch(state.league, hq, aq); if(!fx.lg) fx.lg = state.league.id; msg.innerHTML = ""; renderBudget(); openMatch(fx); }
+  catch(err){ msg.innerHTML = errorBox(err); renderBudget(); }
+};
+
+function boot(){
+  setSource();
+  $("#otherLeague").hidden = true; $("#leagueResults").innerHTML = "";
+  renderChips(); closeMatch(); loadFixtures();
+}
+boot();
+</script>
+
+</body></html>
